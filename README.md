@@ -1,2 +1,4 @@
 to run the code :
-npm start
+backend :node server.js
+frontend npm run dev
+
