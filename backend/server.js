@@ -11,14 +11,12 @@ app.use(cors());
 app.use(express.json());
 
 // Routes (to be added later)
-// app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 
+
+
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
+mongoose.connect('mongodb://127.0.0.1:27017/SwiftEats').then(() => {
   console.log("MongoDB connected");
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  app.listen(3001, () => console.log(`Server running on port ${3001}`));
 }).catch(err => console.error(err));
