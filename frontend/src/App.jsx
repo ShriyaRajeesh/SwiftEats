@@ -1,85 +1,80 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-import BrowseRestaurants from './pages/BrowseRestaurants';
-import RestaurantMenu from './pages/RestaurantMenu';
-import PlaceOrder from './pages/PlaceOrder';
-import OrderHistory from './pages/OrderHistory';
-import OrderTracking from './pages/OrderTracking';
-import DeliveryAgentDashboard from './pages/DeliveryAgentDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import { useAuth } from './context/AuthContext';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/auth/Login';
+import Signup from './pages/auth/Signup';
+import Home from './pages/Home';
+import Unauthorized from './pages/Unauthorized';
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+// Customer Components
+import CustomerDashboard from './pages/customer/Dashboard';
+import Restaurants from './pages/customer/Restaurants';
+import RestaurantMenu from './pages/customer/RestaurantMenu';
+import OrderHistory from './pages/customer/OrderHistory';
+import OrderTracking from './pages/customer/OrderTracking';
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+// Admin Components
+import AdminDashboard from './pages/admin/Dashboard';
+import AnalyticsDashboard from './pages/admin/Analytics';
+import AdminOrders from './pages/admin/Orders';
+import AdminUsers from './pages/admin/Users';
+import AdminAgents from './pages/admin/Agents';
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
+// Delivery Agent Components
+import AgentDashboard from './pages/agent/Dashboard';
+import AgentOrders from './pages/agent/Orders';
+import AgentMap from './pages/agent/Map';
+import AgentExchanges from './pages/agent/Exchanges';
 
 function App() {
-  const { user, login } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        login(token);
-        const decoded = jwtDecode(token);
-        // Handle navigation after login
-        if (decoded.role === "Admin") navigate("/admin/dashboard");
-        else if (decoded.role === "Agent") navigate("/agent/dashboard");
-      } catch (err) {
-        console.error("Invalid token", err);
-        localStorage.removeItem('token');
-      }
-    }
-  }, [login, navigate]);
-
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<BrowseRestaurants />} />
-      <Route path="/restaurant/:id" element={<RestaurantMenu />} />
-      <Route path="/place-order" element={<PlaceOrder />} />
-      <Route path="/orders" element={<OrderHistory />} />
-      <Route path="/order/:orderId/track" element={<OrderTracking />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
+    <Router>
+      <AuthProvider>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
 
-      {/* Protected Routes */}
-      <Route
-        path="/agent/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['Agent', 'Admin']}>
-            <DeliveryAgentDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['Admin']}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+          {/* Customer Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['Customer']} />}>
+            <Route path="/customer" element={<CustomerDashboard />}>
+              <Route path="restaurants" element={<Restaurants />} />
+              <Route path="restaurants/:id" element={<RestaurantMenu />} />
+              <Route path="orders" element={<OrderHistory />} />
+              <Route path="orders/:id" element={<OrderTracking />} />
+              <Route path="favorites" element={<div className="p-4">Favorites Page</div>} />
+              <Route index element={<Restaurants />} />
+            </Route>
+          </Route>
+
+         {/* Delivery Agent Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['DeliveryAgent']} />}>
+            <Route path="/agent" element={<AgentDashboard />}>
+              <Route path="dashboard" element={<AgentOrders />} /> {/* Add this line */}
+              <Route path="orders" element={<AgentOrders />} />
+              <Route path="map" element={<AgentMap />} />
+              <Route path="exchanges" element={<AgentExchanges />} />
+              <Route index element={<AgentOrders />} /> {/* Default route */}
+            </Route>
+          </Route>
+
+          // Add to your existing routes
+          {/* Admin Routes - Updated Structure */}
+          <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
+            <Route path="/admin" element={<AdminDashboard />}>
+              <Route path="dashboard" element={<AnalyticsDashboard />} />
+              <Route path="analytics" element={<AnalyticsDashboard />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="agents" element={<AdminAgents />} />
+              <Route index element={<AnalyticsDashboard />} />
+            </Route>
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 

@@ -1,59 +1,58 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import { useNavigate } from "react-router-dom";
 
-export const AuthContext = createContext();
+
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem('token') || null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (storedToken) {
-      try {
-        const decoded = jwtDecode(storedToken);
-        setUser(decoded);
-        setToken(storedToken);
-      } catch (err) {
-        console.error("Invalid token", err);
+    if (token) {
+      const decoded = jwtDecode(token);
+      setUser(decoded);
+      
+      if (decoded.exp * 1000 < Date.now()) {
         logout();
       }
     }
-    setLoading(false);
-  }, []);
+  }, [token]);
 
-  const login = (newToken) => {
-    localStorage.setItem("token", newToken);
-    const decoded = jwtDecode(newToken);
+  const login = (token) => {
+    localStorage.setItem('token', token);
+    setToken(token);
+    const decoded = jwtDecode(token);
     setUser(decoded);
-    setToken(newToken);
+    console.log("Redirecting based on role:", decoded.role);
+
     
-    if (decoded.role === "Admin") navigate("/admin/dashboard");
-    else if (decoded.role === "Agent") navigate("/agent/dashboard");
-    else navigate("/");
+    switch(decoded.role) {
+      case 'Admin':
+        navigate('/admin/dashboard');
+        break;
+      case 'DeliveryAgent':
+        navigate('/agent/dashboard');
+        break;
+      default:
+        navigate('/customer/restaurants');
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
+    localStorage.removeItem('token');
     setToken(null);
-    navigate("/login");
+    setUser(null);
+    navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);

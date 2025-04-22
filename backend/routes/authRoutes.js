@@ -7,23 +7,70 @@ const jwt = require('jsonwebtoken');
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
-  // Check if required fields are present
+  // Basic validation
   if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password required' });
+    return res.status(400).json({ 
+      success: false,
+      message: 'Email and password are required' 
+    });
   }
 
   try {
+    // 1. Find user by email
     const user = await User.findOne({ email });
-    console.log('📩 Login Request:', req.body);
-    console.log('🔍 Found user:', user.password);
-    if (!user || user.password !== password) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    console.log("Login successful. User role:", user.role);
+    console.log("Token payload:", {
+      userId: user._id,
+      name: user.name,
+      role: user.role,
+      email: user.email
+    });
+    
+    if (!user) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Invalid credentials' 
+      });
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, 'secretKey'); // replace with process.env.JWT_SECRET
-    res.json({ token, role: user.role });
+    // 2. Compare plain text passwords
+    if (password !== user.password) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Invalid credentials' 
+      });
+    }
+
+    // 3. Create JWT token
+    const token = jwt.sign(
+      { 
+        userId: user._id,
+        name: user.name,
+        role: user.role, // This will now be 'Admin', 'DeliveryAgent', or 'Customer'
+        email: user.email
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    // 4. Send successful response
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Login error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error during authentication' 
+    });
   }
 });
 
