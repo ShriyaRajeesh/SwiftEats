@@ -4,6 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 const orderRoutes = require('./routes/orderRoutes');
 const deliveryAgentRoutes = require('./routes/deliveryAgentRoutes');
+const routeRoutes = require('./routes/routeRoutes');  
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,8 +23,10 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/restaurants',restaurantRoutes);
 app.use('/api/menus',menuRoutes);
 app.use('/api/orders',orderRoutes);
-app.use('/api/deliveryagents', deliveryAgentRoutes);
+app.use('/api/agents', deliveryAgentRoutes);
 
+
+app.use('/api/route', routeRoutes); 
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
