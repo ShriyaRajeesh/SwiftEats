@@ -92,41 +92,45 @@ const AgentMap = () => {
           
           {/* Restaurant markers */}
           {displayOrders.map(order => (
-            <Marker
-              key={`rest-${order._id}`}
-              position={[order.restaurant.lat, order.restaurant.lng]}
-              icon={createIcon('restaurant')}
-            >
-              <Popup>
-                <div className="text-black">
-                  <strong>{order.restaurant.name}</strong><br />
-                  Order #{order.orderNumber}<br />
-                  Status: {order.status}
-                </div>
-              </Popup>
-            </Marker>
+            order.restaurant?.lat && order.restaurant?.lng && (
+              <Marker
+                key={`rest-${order._id}`}
+                position={[order.restaurant.lat, order.restaurant.lng]}
+                icon={createIcon('restaurant')}
+              >
+                <Popup>
+                  <div className="text-black">
+                    <strong>{order.restaurant.name}</strong><br />
+                    Order #{order.orderNumber}<br />
+                    Status: {order.status}
+                  </div>
+                </Popup>
+              </Marker>
+            )
           ))}
           
           {/* Delivery location markers */}
           {displayOrders.map(order => (
-            <Marker
-              key={`deliv-${order._id}`}
-              position={[order.deliveryLat, order.deliveryLng]}
-              icon={createIcon('delivery')}
-            >
-              <Popup>
-                <div className="text-black">
-                  <strong>Delivery for {order.customer.name}</strong><br />
-                  {order.deliveryAddress}<br />
-                  <a 
-                    href={`tel:${order.customer.phone}`}
-                    className="text-blue-500 hover:underline"
-                  >
-                    Call Customer
-                  </a>
-                </div>
-              </Popup>
-            </Marker>
+            order.deliveryLat && order.deliveryLng && (
+              <Marker
+                key={`deliv-${order._id}`}
+                position={[order.deliveryLat, order.deliveryLng]}
+                icon={createIcon('delivery')}
+              >
+                <Popup>
+                  <div className="text-black">
+                    <strong>Delivery for {order.customer.name}</strong><br />
+                    {order.deliveryAddress}<br />
+                    <a 
+                      href={`tel:${order.customer.phone}`}
+                      className="text-blue-500 hover:underline"
+                    >
+                      Call Customer
+                    </a>
+                  </div>
+                </Popup>
+              </Marker>
+            )
           ))}
         </MapContainer>
       </div>

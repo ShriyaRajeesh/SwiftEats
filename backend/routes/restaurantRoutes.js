@@ -1,10 +1,14 @@
-const express=require('express');
-const router=express.Router();
-//creates and instance of an express router
-//a router helps you group route handlers by functionality-here for restaurants
-const {addRestaurant,getRestaurant}=require('../controllers/restaurantController')
-//Route:/api/restaurants
-router.post('/',addRestaurant);
-router.get('/',getRestaurant);
-module.exports=router;
+const express = require('express');
+const router = express.Router();
+const { addRestaurant, getRestaurant, getRestaurantById } = require('../controllers/restaurantController');
 
+// POST route to add a new restaurant
+router.post('/', addRestaurant);
+
+// GET route to get all restaurants
+router.get('/', getRestaurant);
+
+// GET route to get a restaurant by restaurantId
+router.get('/:restaurantId', getRestaurantById);
+
+module.exports = router;

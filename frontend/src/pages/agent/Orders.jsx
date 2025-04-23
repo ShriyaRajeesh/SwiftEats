@@ -9,22 +9,50 @@ const AgentOrders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        // In a real app, this would fetch only orders assigned to the current agent
         const response = await api.get('/orders?status=assigned');
-        setOrders(response.data);
+        const orders = response.data;
+
+        // Fetch restaurant and customer names
+        const enrichedOrders = await Promise.all(orders.map(async (order) => {
+          let restaurantName = 'Unknown Restaurant';
+          let customerName = 'Unknown Customer';
+
+          try {
+            const restaurantRes = await api.get(`/restaurants/${order.restaurantId}`);
+            restaurantName = restaurantRes.data.name || restaurantName;
+          } catch (err) {
+            console.warn(`Could not fetch restaurant: ${order.restaurantId}`);
+          }
+
+          try {
+            const userRes = await api.get(`/users/${order.userId}`);
+            customerName = userRes.data.name || customerName;
+          } catch (err) {
+            console.warn(`Could not fetch user: ${order.userId}`);
+          }
+
+          return {
+            ...order,
+            restaurantName,
+            customerName,
+          };
+        }));
+
+        setOrders(enrichedOrders);
       } catch (error) {
         console.error('Error fetching orders:', error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchOrders();
   }, []);
 
   const updateOrderStatus = async (orderId, status) => {
     try {
-      await api.patch(`/orders/${orderId}`, { status });
-      setOrders(orders.map(order => 
+      await api.patch(`/orders/${orderId}/status`, { status });
+      setOrders(orders.map(order =>
         order._id === orderId ? { ...order, status } : order
       ));
     } catch (error) {
@@ -43,7 +71,7 @@ const AgentOrders = () => {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold text-white mb-6">Assigned Orders</h1>
-      
+
       {orders.length === 0 ? (
         <div className="bg-[#222222] rounded-lg p-8 text-center">
           <p className="text-gray-400">No orders assigned to you currently</p>
@@ -54,8 +82,8 @@ const AgentOrders = () => {
             <div key={order._id} className="bg-[#222222] rounded-lg p-4">
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Order #{order.orderNumber}</h3>
-                  <p className="text-gray-400">{order.restaurant.name}</p>
+                  <h3 className="text-lg font-semibold text-white">Order #{order.orderNumber || order._id.slice(-6)}</h3>
+                  <p className="text-gray-400">{order.restaurantName}</p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm ${
                   order.status === 'Picked' ? 'bg-blue-500' :
@@ -66,22 +94,22 @@ const AgentOrders = () => {
                   {order.status}
                 </span>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
                   <p className="text-gray-400 text-sm">Customer</p>
-                  <p className="text-white">{order.customer.name}</p>
+                  <p className="text-white">{order.customerName}</p>
                 </div>
                 <div>
                   <p className="text-gray-400 text-sm">Delivery Address</p>
-                  <p className="text-white">{order.deliveryAddress}</p>
+                  <p className="text-white">{order.deliveryAddress || 'No Address Provided'}</p>
                 </div>
                 <div>
                   <p className="text-gray-400 text-sm">Total</p>
-                  <p className="text-[#1DCD9F]">${order.total.toFixed(2)}</p>
+                  <p className="text-[#1DCD9F]">${order.total?.toFixed(2) || '0.00'}</p>
                 </div>
               </div>
-              
+
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => updateOrderStatus(order._id, 'Picked')}

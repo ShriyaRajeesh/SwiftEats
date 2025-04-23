@@ -29,5 +29,17 @@ exports.addRestaurant = async (req, res) => {
         }
 
     };
+
+    exports.getRestaurantById = async (req, res) => {
+      try {
+        const restaurant = await Restaurant.findOne({ restaurantId: req.params.restaurantId });
+        if (!restaurant) {
+          return res.status(404).json({ error: 'Restaurant not found' });
+        }
+        res.json(restaurant);
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
+    };
     
 

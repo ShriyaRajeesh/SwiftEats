@@ -19,7 +19,8 @@ const AdminDashboard = () => {
           
           <nav className="flex-1">
             <ul className="space-y-2">
-              <li>
+              {/* Analytics Section (Commented Out) */}
+              {/* <li>
                 <Link
                   to="/admin/analytics"
                   className={`flex items-center p-3 rounded-lg ${isActive('analytics') ? 'bg-[#1DCD9F] text-white' : 'text-gray-300 hover:bg-[#333333]'}`}
@@ -27,7 +28,7 @@ const AdminDashboard = () => {
                   <span className="mr-3">📊</span>
                   <span>Analytics</span>
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link
                   to="/admin/orders"

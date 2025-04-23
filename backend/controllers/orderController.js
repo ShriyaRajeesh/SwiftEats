@@ -13,14 +13,20 @@ exports.placeOrder = async (req, res) => {
 
 // View orders by user
 exports.getUserOrders = async (req, res) => {
-  try {
-    const orders = await Order.find({ userId: req.params.userId });
-    res.json(orders);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
+    const userId = req.params.userId;
+  
+    try {
+      const orders = await Order.find({ userId: userId });
+      if (orders.length === 0) {
+        return res.status(200).json([]); // Empty array if no orders found
+      }
+      return res.status(200).json(orders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      return res.status(500).json({ message: 'Error fetching orders' });
+    }
+  };
+  
 // Assign a delivery agent to an order
 exports.assignDeliveryAgent = async (req, res) => {
   try {
@@ -51,18 +57,11 @@ exports.updateOrderStatus = async (req, res) => {
 
 // New method to get orders by status
 exports.getOrdersByStatus = async (req, res) => {
-  try {
-    const { status } = req.query; // Extract the status from query parameters
-
-    if (!status) {
-      return res.status(400).json({ message: 'Status query parameter is required' });
+    try {
+        const status = req.query.status; // Get the status from query parameters
+        const orders = await Order.find({ status }); // Find orders with the provided status
+        res.json(orders);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-
-    // Find orders based on the status
-    const orders = await Order.find({ status });
-
-    res.json(orders);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
 };

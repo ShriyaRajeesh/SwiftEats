@@ -11,6 +11,8 @@ const menuRoutes = require('./routes/menuRoutes');
 const adminRoutes = require('./routes/adminRoutes'); // ✅ Import admin routes
 const adminAgentRoutes = require('./routes/adminAgentRoutes'); // ✅ NEW
 const adminOrdersRoutes = require('./routes/adminOrders');
+const userRoutes = require('./routes/userRoutes');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -28,6 +30,8 @@ app.use('/api/route', routeRoutes);
 app.use('/api/admin', adminRoutes); // ✅ Mount admin routes
 app.use('/api/admin', adminAgentRoutes); // ✅ NEW
 app.use('/api/adminOrders', adminOrdersRoutes);
+app.use('/api/users', userRoutes); // User routes
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
