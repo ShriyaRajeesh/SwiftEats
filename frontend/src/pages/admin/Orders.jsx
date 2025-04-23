@@ -17,8 +17,8 @@ const AdminOrders = () => {
         if (filters.status) params.append('status', filters.status);
         if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
         if (filters.dateTo) params.append('dateTo', filters.dateTo);
-        
-        const response = await api.get(`/admin/orders?${params.toString()}`);
+
+        const response = await api.get(`/adminOrders?${params.toString()}`);
         setOrders(response.data);
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -37,12 +37,15 @@ const AdminOrders = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Delivered': return 'bg-green-500';
-      case 'In Transit': return 'bg-yellow-500';
-      case 'Cancelled': return 'bg-red-500';
-      case 'Pending': return 'bg-blue-500';
+      case 'Picked up': return 'bg-yellow-500';
+      case 'Exchanged': return 'bg-purple-500';
+      case 'Placed': return 'bg-blue-500';
       default: return 'bg-gray-500';
     }
   };
+
+  const calculateTotal = (items = []) =>
+    items.reduce((sum, item) => sum + (item.quantity ?? 0) * 10, 0); // assume fixed price for now
 
   if (loading) {
     return (
@@ -55,7 +58,7 @@ const AdminOrders = () => {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold text-white mb-6">All Orders</h1>
-      
+
       {/* Filters */}
       <div className="bg-[#222222] rounded-lg p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -68,10 +71,10 @@ const AdminOrders = () => {
               className="w-full p-2 rounded bg-[#000000] border border-[#444444] text-white"
             >
               <option value="">All Statuses</option>
-              <option value="Pending">Pending</option>
-              <option value="In Transit">In Transit</option>
+              <option value="Placed">Placed</option>
+              <option value="Picked up">Picked up</option>
+              <option value="Exchanged">Exchanged</option>
               <option value="Delivered">Delivered</option>
-              <option value="Cancelled">Cancelled</option>
             </select>
           </div>
           <div>
@@ -111,40 +114,40 @@ const AdminOrders = () => {
           <table className="min-w-full">
             <thead className="bg-[#1DCD9F]">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Order #</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Restaurant</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Order ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">User ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Restaurant ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Items</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Total</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Total (est)</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Created</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#444444]">
               {orders.map(order => (
                 <tr key={order._id} className="hover:bg-[#333333]">
-                  <td className="px-6 py-4 whitespace-nowrap text-white">{order.orderNumber}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-white">{order.customer.name}</div>
-                    <div className="text-gray-400 text-sm">{order.customer.phone}</div>
+                  <td className="px-6 py-4 text-white">{order._id}</td>
+                  <td className="px-6 py-4 text-white">{order.userId}</td>
+                  <td className="px-6 py-4 text-white">{order.restaurantId}</td>
+                  <td className="px-6 py-4 text-white">
+                    {Array.isArray(order.items) && order.items.length > 0
+                      ? order.items.map((item, idx) => (
+                          <div key={idx}>
+                            {item.name} x {item.quantity}
+                          </div>
+                        ))
+                      : <em>No items</em>}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-white">{order.restaurant.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
                       {order.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-[#1DCD9F]">${order.total.toFixed(2)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-400">
-                    {new Date(order.createdAt).toLocaleDateString()}
+                  <td className="px-6 py-4 text-[#1DCD9F]">
+                    ₹{calculateTotal(order.items).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button className="text-[#1DCD9F] hover:text-[#169976] mr-3">
-                      View
-                    </button>
-                    <button className="text-gray-400 hover:text-white">
-                      Edit
-                    </button>
+                  <td className="px-6 py-4 text-gray-400">
+                    {new Date(order.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
               ))}

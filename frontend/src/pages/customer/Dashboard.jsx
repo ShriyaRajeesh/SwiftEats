@@ -13,7 +13,7 @@ const CustomerDashboard = () => {
       <div className="fixed inset-y-0 left-0 w-64 bg-[#222222] p-4 hidden md:block">
         <div className="flex flex-col h-full">
           <div className="mb-8">
-            <h1 className="text-xl font-bold text-[#1DCD9F]">FoodDelivery</h1>
+            <h1 className="text-xl font-bold text-[#1DCD9F]">SwiftEats</h1>
             <p className="text-gray-400 text-sm">Customer Dashboard</p>
           </div>
           
